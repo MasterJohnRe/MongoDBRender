@@ -1,17 +1,15 @@
 #!/bin/bash
 
-# Start MongoDB in background
+# Start MongoDB in background with replica set and open to all interfaces
 mongod --replSet rs0 --bind_ip_all --port 27017 &
 
-# Wait for MongoDB to be ready
+# Wait for MongoDB to initialize
 sleep 5
 
-# Initialize replica set (will fail if already initiated — that's fine)
+# Try to initiate the replica set (won't fail if already initialized)
 mongosh --eval 'try { rs.initiate() } catch(e) { print(e) }'
 
-# Dummy HTTP server to keep Render happy (Python)
-# Responds with "MongoDB OK" to any request
-echo -e "HTTP/1.1 200 OK\n\nMongoDB OK" > response.txt
-while true; do
-  { cat response.txt; } | nc -l -p 10000 -q 1;
-done
+# Start a minimal Python HTTP server to keep Render happy
+# It will serve on port 10000 and respond to health checks
+cd /
+python3 -m http.server 10000
